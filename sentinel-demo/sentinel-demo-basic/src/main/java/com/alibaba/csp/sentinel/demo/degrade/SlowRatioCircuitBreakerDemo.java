@@ -74,13 +74,18 @@ public class SlowRatioCircuitBreakerDemo {
         int concurrency = 8;
         for (int i = 0; i < concurrency; i++) {
             Thread entryThread = new Thread(() -> {
+                long rtstart = System.currentTimeMillis();
                 while (true) {
                     Entry entry = null;
                     try {
                         entry = SphU.entry(KEY);
                         pass.incrementAndGet();
-                        // RT: [40ms, 60ms)
-                        sleep(ThreadLocalRandom.current().nextInt(40, 60));
+                        // RT
+                        if(System.currentTimeMillis()-rtstart>30*1000){             //After some time, the response time is normal, the degradation ends, and the service returns to normal
+                            sleep(ThreadLocalRandom.current().nextInt(20, 40));     //Normal RT
+                        }else{
+                            sleep(ThreadLocalRandom.current().nextInt(60, 80));     // slow RT
+                        }
                     } catch (BlockException e) {
                         block.incrementAndGet();
                         sleep(ThreadLocalRandom.current().nextInt(5, 10));
